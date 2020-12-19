@@ -25,7 +25,8 @@ public class JoyStick : MonoBehaviour
     //當前禎跟前一禎的座標差
     public Vector2 no;
 
-
+    //
+    public GameObject player1;
     //武器活動參數
     public float armath;
     //武器本體
@@ -69,26 +70,28 @@ public class JoyStick : MonoBehaviour
             if (arm.gameObject.GetComponent<Collider>().isTrigger)
             {
                 joyStick.transform.position = touch.position;
+                //play knifeSound
             }
             //前臂動畫的即時轉向
+            //持續更新當前禎
             newPos = joyStick.transform.position;
+            //當前禎減前一禎的座標算向量
             no = newPos - oldPos;
-            //兩座標的向量
+            //當前禎變前一禎，前一禎取得當前禎的值
             oldPos = newPos;
-            //向量的 弧度轉角度
-            armath = Mathf.Rad2Deg*Mathf.Atan(no.x/no.y);
+            //斜率轉成弧度 弧度轉角度
+            armath = Mathf.Atan2(no.y,no.x)*Mathf.Rad2Deg;
+            if(armath<0)
+            {
+                armath += 360;
+            }
 
             {   
                 #region 武器揮動的細節
                 //武器旋轉的角度armath
                 //武器旋轉的角度轉成0~1給前臂以下的動畫
-                //去除atan的無效值
-                if (armath = null)
-                {
-                    arm.transform.right = Vector2.zero;
-                }
                 //右前左後rl，死角第四象限(換手)
-                else if (armath < 270 - lrrl & armath > 0)
+                if (armath < 270 - lrrl & armath > 0)
                 {
                     //換手
                     if (lrmode ==1)
