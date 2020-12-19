@@ -33,7 +33,7 @@ public class JoyStick : MonoBehaviour
     [Header("武器活動第三、四象限的變數")]
     public float lrrl;
     //左前右後模式
-    private bool lrmode=false;
+    public float lrmode=0;
 
 
     //是否觸摸虛擬搖桿
@@ -66,7 +66,7 @@ public class JoyStick : MonoBehaviour
         if (direction.x<jyRadiu& direction.y < jyRadiu)
         {
             //不是格黨才能移動搖桿(碰撞體碰撞)
-            if ()
+            if (arm.gameObject.GetComponent<Collider>().isTrigger)
             {
                 joyStick.transform.position = touch.position;
             }
@@ -76,7 +76,7 @@ public class JoyStick : MonoBehaviour
             //兩座標的向量
             oldPos = newPos;
             //向量的 弧度轉角度
-            armath = (180/3.14f)*Mathf.Atan(no.x/no.y);
+            armath = Mathf.Rad2Deg*Mathf.Atan(no.x/no.y);
 
             {   
                 #region 武器揮動的細節
@@ -91,13 +91,13 @@ public class JoyStick : MonoBehaviour
                 else if (armath < 270 - lrrl & armath > 0)
                 {
                     //換手
-                    if (lrmode == true)
+                    if (lrmode ==1)
                     {
                         anim.Play("lrrl");
-                        lrmode = false;
+                        lrmode = 0;
                     }
                     //持續非左前右後模式
-                    if (lrmode == false & anim["lrrl"].normalizedTime = 0)
+                    if (lrmode ==0 & anim["lrrl"].normalizedTime == 1)
                     {
                         //arm.transform.right = Quaternion(arm.transform.position.x, arm.transform.position.y, armath);
                         arm.transform.eulerAngles = new Vector3(arm.transform.position.x, arm.transform.position.y, armath);
@@ -105,16 +105,16 @@ public class JoyStick : MonoBehaviour
                     }
                 }
                 //左前右後lr,死角第三象限(換手)
-                else if (armath > 270 + lrrl & armath < 180 & lrmode)
+                else if (armath > 270 + lrrl & armath < 180 & lrmode==1)
                 {
                     //換手
-                    if (lrmode == false)
+                    if (lrmode ==0)
                     {
                         anim.Play("rllr");
-                        lrmode = true;
+                        lrmode = 1;
                     }
                     //持續左前右後模式
-                    if (lrmode == true & anim["rllr"].normalizedTime = 0)
+                    if (lrmode == 1 & anim["rllr"].normalizedTime ==1)
                     {
                         //arm.transform.right = Quaternion( eulerAngle[arm.transform.position.x, arm.transform.position.y, armath]);
                         arm.transform.eulerAngles = new Vector3(arm.transform.position.x,arm.transform.position.y,armath);
