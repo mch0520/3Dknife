@@ -413,7 +413,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 396827433}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 29d03a0333dfcb544a665fca25e7d155, type: 3}
   m_Name: 
@@ -987,6 +987,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4dbeff7a3aef1474aadaba9c05c61382, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  joyStick: {fileID: 867220851}
+  joyBG: {fileID: 507338844}
+  jyRadiu: 0
+  direction: {x: 0, y: 0}
+  startPos: {x: 0, y: 0}
+  oldV2: {x: 0, y: 0}
+  newV2: {x: 0, y: 0}
+  noV2: {x: 0, y: 0}
+  armath: 0
+  arm: {fileID: 0}
+  lrrl: 0
+  lrmode: 0
+  anim: {fileID: 0}
 --- !u!4 &1794514759
 Transform:
   m_ObjectHideFlags: 0
