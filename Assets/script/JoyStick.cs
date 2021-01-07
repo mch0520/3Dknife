@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-//https://k79k06k02k.pixnet.net/blog/post/114531737?pixfrom=related
+/** https://k79k06k02k.pixnet.net/blog/post/114531737?pixfrom=related **/
 
 public class JoyStick : MonoBehaviour
 {
@@ -51,6 +51,8 @@ public class JoyStick : MonoBehaviour
 
     //武器是否互相碰撞
     public bool attack = false;
+    [Header("碰撞音效")]
+    public AudioClip collideSound;
 
     //武器動畫
     public Animation anim;
@@ -65,7 +67,20 @@ public class JoyStick : MonoBehaviour
         //重置搖桿的位置
         joyStick.transform.position = startPos;
     }
+    private void Update()
+    {
+        //分配碰撞的種類ID,武器互撞事件
+        if (armRigi.isTrigger)
+        {
+            //停住搖桿
+            isTouched = false;
+            //觸發格黨事件(音效)
+            attack = true;
+        }
 
+    }
+
+    #region 事件
     public void OnPointerDown(PointerEventData eventData)
     {
         isTouched = true;
@@ -73,7 +88,6 @@ public class JoyStick : MonoBehaviour
         //播放拔刀動畫
         //
     }
-
     public void OnMove(PointerEventData eventData)
     {
         //搖桿對背景圖中心的距離
@@ -82,16 +96,7 @@ public class JoyStick : MonoBehaviour
         //在正方形範圍內移動
         if (direction.x < jyRadiu & direction.y < jyRadiu)
         {
-            //分配碰撞的種類ID
-            //武器碰撞後,對敵人武器的方向  不能移動搖桿(碰撞體碰撞)
-            if (armRigi.isTrigger)
-            {
-                //停住搖桿
-                isTouched = false;
-                //觸發格黨事件(音效)
-                attack = true;
-            }
-
+            //武器互撞後,對敵人武器的方向  不能移動搖桿(碰撞體碰撞)
             //180-對方的角度 為 看到的相對角度
             //可切入 相對角度再加95度以外
             if (armathA > (180 - armathB) + 95 & armathA < (180 - armathB) - 95)
@@ -196,11 +201,10 @@ public class JoyStick : MonoBehaviour
             }
             #endregion
 
-            //前臂動畫要調整
             #region 前臂動畫
             //武器旋轉的角度armath
             //武器旋轉的角度轉成0~1給前臂以下的動畫
-            //右前左後rl，死角第四象限(換手)
+            #region 右前左後rl，死角第四象限(換手)
             if (armathA < 270 - lrrl & armathA > 0)
             {
                 //換手
@@ -224,7 +228,8 @@ public class JoyStick : MonoBehaviour
                     }
                 }
             }
-            //左前右後lr,死角第三象限(換手)
+            #endregion
+            #region 左前右後lr,死角第三象限(換手)
             else if (armathA > 270 + lrrl & armathA < 180 & lrmode == 1)
             {
                 //換手
@@ -247,7 +252,10 @@ public class JoyStick : MonoBehaviour
                         anim["lr"].speed = 0;
                     }
                 }
-            }//死角轉正，未測試空條件是否可執行
+
+            }
+            #endregion
+            //死角轉正，未測試else是否可執行
             else
             {
                 //武器 與 角色同向
@@ -271,6 +279,6 @@ public class JoyStick : MonoBehaviour
         //播放收刀動畫
         //
     }
-
+    #endregion
 
 }
