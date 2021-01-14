@@ -18,7 +18,7 @@ public class JoyStick : MonoBehaviour
     //搖桿離背景圖中心的距離
     public Vector2 direction;
     //搖桿原點
-    public Vector2 startPos = Vector3.zero;
+    public Vector2 startPos = Vector2.zero;
     //上一禎的點
     public Vector2 oldV2;
     //當前禎的點
@@ -33,6 +33,8 @@ public class JoyStick : MonoBehaviour
 
 
     //武器活動參數
+    public float armath;
+    //碰撞時 我的武器角度
     public float armathA;
     //敵人的武器角度
     public float armathB;
@@ -50,7 +52,13 @@ public class JoyStick : MonoBehaviour
     bool isTouched = false;
 
     //武器是否互相碰撞
-    public bool attack = false;
+    public bool parry = false;
+    //碰撞時 上一禎的點
+    public Vector2 oldV2Att;
+    //碰撞時 當前禎的點
+    public Vector2 newV2Att;
+    //碰撞時 當前禎跟前一禎的座標差
+    public Vector2 noV2Att;
     [Header("碰撞音效")]
     public AudioClip collideSound;
 
@@ -69,18 +77,83 @@ public class JoyStick : MonoBehaviour
     }
     private void Update()
     {
-        //分配碰撞的種類ID,武器互撞事件
+        //武器互撞事件
         if (armRigi.isTrigger)
         {
             //停住搖桿
             isTouched = false;
             //觸發格黨事件(音效)
-            attack = true;
+            Parry();
+            parry = true;
         }
 
     }
 
     #region 事件
+    private void Attzck()
+    {
+        //計算(攻擊長度/30cm)*攻擊力
+
+    }
+
+    /// <summary>
+    /// 格黨 touch的每一楨向量 轉 角度
+    /// </summary>
+    private float Parry()
+    {
+        //搖桿 跟 碰撞時停住的動畫點 同步
+        //搖桿點/最大半徑=動畫點
+        //搖桿點=動畫點*最大半徑
+        joyStick.transform.position = new Vector2(anim["x"].normalizedTime*jyRadiu, anim["y"].normalizedTime*jyRadiu);
+
+        #region 格黨時 每一楨的向量noV2Att
+        Touch touch = Input.GetTouch(0);
+        //碰撞時 兩座標的向量
+        noV2Att = touch.position - (Vector2)joyStick.transform.position;
+        #endregion
+
+        #region Atan2的xy為0,返回正確的角度,而不是拋出被0除的異常
+        if (noV2Att.x == 0 && noV2Att.y > 0)
+        {
+            armathA = 90;
+        }
+        else if (noV2Att.y < 0)
+        {
+            armathA = 270;
+        }
+
+        if (noV2Att.y == 0 && noV2Att.x >= 0)
+        {
+            armathA = 0;
+        }
+        else
+        {
+            armathA = 180;
+        }
+        #endregion
+
+        #region 向量轉為角度
+        if (noV2Att.x != 0 && noV2Att.y != 0)
+        {
+            //向量轉斜率Atan2() * 弧度轉角度 
+            //弧度轉角度 為 常數 Rad2Deg =57.29578
+            armathA = Mathf.Atan2(noV2Att.x, noV2Att.y) * Mathf.Rad2Deg;
+        }
+        #endregion
+
+        #region 控制角度在0~360
+        if (armathA < 0)
+        {
+            armathA += 360;
+        }
+        if (armathA > 360)
+        {
+            armathA -= 360;
+        }
+        #endregion
+        return armathA;
+    }
+
     public void OnPointerDown(PointerEventData eventData)
     {
         isTouched = true;
@@ -96,6 +169,7 @@ public class JoyStick : MonoBehaviour
         //在正方形範圍內移動
         if (direction.x < jyRadiu & direction.y < jyRadiu)
         {
+            #region 離開格黨的範圍
             //武器互撞後,對敵人武器的方向  不能移動搖桿(碰撞體碰撞)
             //180-對方的角度 為 看到的相對角度
             //可切入 相對角度再加95度以外
@@ -103,14 +177,18 @@ public class JoyStick : MonoBehaviour
             {
                 //允許觸摸搖桿
                 isTouched = true;
-
+                parry = false;
             }
+            #endregion
+
+
 
             //可以觸摸搖桿
             if (isTouched)
             {
                 joyStick.transform.position = touch.position;
 
+                //搖桿x或y為0時沒移動完就停了，要調整
                 #region 上下左右揮舞動畫
                 //左右揮舞動畫
                 anim.Play("x");
@@ -118,7 +196,7 @@ public class JoyStick : MonoBehaviour
                 { anim["x"].speed = -1; }
                 else if (joyStick.transform.position.x > 0)
                 { anim["x"].speed = 1; }
-                if (anim["x"].normalizedTime == joyStick.transform.position.x || joyStick.transform.position.x == 0)
+                if (anim["x"].normalizedTime == joyStick.transform.position.x/jyRadiu || joyStick.transform.position.x == 0)
                 { anim["x"].speed = 0; }
                 //上下揮舞動畫
                 anim.Play("y");
@@ -126,13 +204,12 @@ public class JoyStick : MonoBehaviour
                 { anim["y"].speed = -1; }
                 else if (joyStick.transform.position.y > 0)
                 { anim["y"].speed = 1; }
-                if (anim["y"].normalizedTime == joyStick.transform.position.y || joyStick.transform.position.y == 0)
+                if (anim["y"].normalizedTime == joyStick.transform.position.y/jyRadiu || joyStick.transform.position.y == 0)
                 {
                     anim["y"].speed = 0;
                 }
                 #endregion
             }
-            
 
             #region 搖桿 每一楨的向量noV2
             //更新當前楨
@@ -146,20 +223,20 @@ public class JoyStick : MonoBehaviour
             #region Atan2的xy為0,返回正確的角度,而不是拋出被0除的異常
             if (noV2.x == 0 && noV2.y > 0)
             {
-                armathA = 90;
+                armath = 90;
             }
             else if (noV2.y < 0)
             {
-                armathA = 270;
+                armath = 270;
             }
 
             if (noV2.y == 0 && noV2.x >= 0)
             {
-                armathA = 0;
+                armath = 0;
             }
             else
             {
-                armathA = 180;
+                armath = 180;
             }
             #endregion
 
@@ -168,24 +245,24 @@ public class JoyStick : MonoBehaviour
             {
                 //向量轉斜率Atan2() * 弧度轉角度 
                 //弧度轉角度 為 常數 Rad2Deg =57.29578
-                armathA = Mathf.Atan2(noV2.x, noV2.y) * Mathf.Rad2Deg;
+                armath = Mathf.Atan2(noV2.x, noV2.y) * Mathf.Rad2Deg;
             }
             #endregion
 
             #region 控制角度在0~360
-            if (armathA < 0)
+            if (armath < 0)
             {
-                armathA += 360;
+                armath += 360;
             }
-            if (armathA > 360)
+            if (armath > 360)
             {
-                armathA -= 360;
+                armath -= 360;
             }
             #endregion
 
             #region 當前楨角度-上一楨角度算 順時針轉 或 逆時針轉
             //更新當前楨
-            newDeg = armathA ;
+            newDeg = armath;
             //當前楨變上一楨,上一楨 設定為 當前楨
             oldDeg = newDeg;
 
@@ -205,7 +282,7 @@ public class JoyStick : MonoBehaviour
             //武器旋轉的角度armath
             //武器旋轉的角度轉成0~1給前臂以下的動畫
             #region 右前左後rl，死角第四象限(換手)
-            if (armathA < 270 - lrrl & armathA > 0)
+            if (armath < 270 - lrrl & armath > 0)
             {
                 //換手
                 if (lrmode == 1)
@@ -216,13 +293,13 @@ public class JoyStick : MonoBehaviour
                 //持續非左前右後模式
                 if (lrmode == 0 & anim["lrrl"].normalizedTime == 1)
                 {
-                    //arm.transform.right = Quaternion(arm.transform.position.x, arm.transform.position.y, armathA);
+                    //arm.transform.right = Quaternion(arm.transform.position.x, arm.transform.position.y, armath);
                     //武器旋轉
-                    arm.transform.eulerAngles = new Vector3(arm.transform.position.x, arm.transform.position.y, armathA);
+                    arm.transform.eulerAngles = new Vector3(arm.transform.position.x, arm.transform.position.y, armath);
                     //
                     anim.Play("rl");
 
-                    if (anim["rl"].normalizedTime == armathA/360)
+                    if (anim["rl"].normalizedTime == armath / 360)
                     {
                         anim["rl"].speed = 0;
                     }
@@ -230,7 +307,7 @@ public class JoyStick : MonoBehaviour
             }
             #endregion
             #region 左前右後lr,死角第三象限(換手)
-            else if (armathA > 270 + lrrl & armathA < 180 & lrmode == 1)
+            else if (armath > 270 + lrrl & armath < 180 & lrmode == 1)
             {
                 //換手
                 if (lrmode == 0)
@@ -241,13 +318,13 @@ public class JoyStick : MonoBehaviour
                 //持續左前右後模式
                 if (lrmode == 1 & anim["rllr"].normalizedTime == 1)
                 {
-                    //arm.transform.right = Quaternion( eulerAngle[arm.transform.position.x, arm.transform.position.y, armathA]);
+                    //arm.transform.right = Quaternion( eulerAngle[arm.transform.position.x, arm.transform.position.y, armath]);
                     //武器旋轉
-                    arm.transform.eulerAngles = new Vector3(arm.transform.position.x, arm.transform.position.y, armathA);
+                    arm.transform.eulerAngles = new Vector3(arm.transform.position.x, arm.transform.position.y, armath);
                     //
                     anim.Play("lr");
 
-                    if (anim["lr"].normalizedTime == armathA/360)
+                    if (anim["lr"].normalizedTime == armath / 360)
                     {
                         anim["lr"].speed = 0;
                     }
