@@ -65,13 +65,18 @@ public class JoyStick : MonoBehaviour
 
     //武器動畫
     public Animation anim;
-    //攻擊進入點
-    public Vector3 enterV3;
-    //攻擊離開點
-    public Vector3 exitV3;
+
+    /// <summary>
+    /// 攻擊進入點
+    /// </summary>
+    Vector3 enterV3;
+    /// <summary>
+    /// 攻擊離開點
+    /// </summary>
+    Vector3 exitV3;
     [Header("攻擊力")]
-    float power;
-    
+    public float power;
+
     #endregion
 
     public void Start()
@@ -100,27 +105,35 @@ public class JoyStick : MonoBehaviour
 
     #region 事件
 
-    #region 攻擊處理,要調整
+    #region 攻擊處理,要調整，要觸發
     private void Attack()
     {
-        //計算(攻擊長度/30cm)*攻擊力，要調整
-        power = (enterV3.x - exitV3.x)* (enterV3.y - exitV3.y)* (enterV3.z - exitV3.z)/30;
+        //計算(攻擊長度/30cm)
+         power = Mathf.Abs((enterV3.x - exitV3.x) * (enterV3.y - exitV3.y) * (enterV3.z - exitV3.z) / 30);
     }
     /// <summary>
     /// 打人的進入點
     /// </summary>
     /// <param name="collision"></param>
-    private void OnTriggerEnter(Collision collision)
+    private Vector3 OnTriggerEnter(Collision collision)
     {
-        Vector3 ClosestPoint = armRigi.ClosestPoint(enterV3);
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            enterV3 = armRigi.ClosestPoint(arm.transform.position);
+        }
+            return enterV3;
     }
     /// <summary>
     /// 打人的離開點
     /// </summary>
     /// <param name="collision"></param>
-    private void OnTriggerExit(Collision collision)
+    private Vector3 OnTriggerExit(Collision collision)
     {
-        Vector3 ClosestPoint = armRigi.ClosestPoint(exitV3);
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            exitV3 = armRigi.ClosestPoint(arm.transform.position);
+        }
+            return exitV3;
     }
     #endregion
 
@@ -227,15 +240,15 @@ public class JoyStick : MonoBehaviour
                 #region 上下左右揮舞動畫
                 //左右揮舞動畫
                 anim.Play("x");
-                if (newV2.x / jyRadiu - anim["x"].normalizedTime < 0)            anim["x"].speed = -1; 
-                else if (newV2.x / jyRadiu - anim["x"].normalizedTime > 0)       anim["x"].speed = 1; 
-                else  anim["x"].speed = 0; 
+                if (newV2.x / jyRadiu - anim["x"].normalizedTime < 0) anim["x"].speed = -1;
+                else if (newV2.x / jyRadiu - anim["x"].normalizedTime > 0) anim["x"].speed = 1;
+                else anim["x"].speed = 0;
 
                 //上下揮舞動畫
                 anim.Play("y");
-                if (newV2.y / jyRadiu - anim["y"].normalizedTime < 0)            anim["y"].speed = -1; 
-                else if (newV2.y / jyRadiu - anim["y"].normalizedTime > 0)       anim["y"].speed = 1; 
-                else  anim["y"].speed = 0;
+                if (newV2.y / jyRadiu - anim["y"].normalizedTime < 0) anim["y"].speed = -1;
+                else if (newV2.y / jyRadiu - anim["y"].normalizedTime > 0) anim["y"].speed = 1;
+                else anim["y"].speed = 0;
                 #endregion
 
                 #region Atan2的xy為0,返回正確的角度,而不是拋出被0除的異常
@@ -314,7 +327,7 @@ public class JoyStick : MonoBehaviour
                     //持續非左前右後模式
                     if (lrmode == 0 && (anim["lrrl"].normalizedTime == 0 || anim["lrrl"].normalizedTime == 1))
                     {
-                        //arm.transform.right = Quaternion(arm.transform.position.x, arm.transform.position.y, armath);
+                        //arm.transform.rotation = Quaternion.eulerAngles(arm.transform.position.x, arm.transform.position.y, armath);
                         //武器旋轉 跟 角色同步
                         arm.transform.eulerAngles = new Vector3(arm.transform.position.x, arm.transform.position.y, armath);
                         //
