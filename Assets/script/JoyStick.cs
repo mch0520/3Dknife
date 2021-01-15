@@ -50,7 +50,7 @@ public class JoyStick : MonoBehaviour
 
 
     //是否觸摸虛擬搖桿
-    bool isTouched = false;
+    bool isTouched = true;
 
     //武器是否互相碰撞
     public bool parry = false;
@@ -76,7 +76,22 @@ public class JoyStick : MonoBehaviour
     Vector3 exitV3;
     [Header("攻擊力")]
     public float power;
-
+    /// <summary>
+    /// 左至右，橫砍
+    /// </summary>
+    public int attCentral = 0;
+    /// <summary>
+    /// 可使用的橫砍時間
+    /// </summary>
+    float attCentralTime = 1;
+    /// <summary>
+    /// 被阻擋拔刀時間
+    /// </summary>
+    float blockedTime = 1.5f;
+    /// <summary>
+    /// 被阻擋拔刀
+    /// </summary>
+    bool blocked;
     #endregion
 
     public void Start()
@@ -89,6 +104,7 @@ public class JoyStick : MonoBehaviour
         //重置搖桿的位置
         joyStick.transform.position = startPos;
     }
+
     private void Update()
     {
         //武器互撞事件
@@ -100,40 +116,63 @@ public class JoyStick : MonoBehaviour
             Parry();
             parry = true;
         }
+        //拔刀禦敵 一段時間後，可 橫砍時間 失效
+        if (attCentral > 0)
+        {
+            attCentralTime -= Time.deltaTime;
+            if (attCentralTime == 0)
+            {
+                attCentral = 0;
+                attCentralTime = 1;
+            }
+        }
 
+        //被阻擋，需要一段時間恢復
+        if (blocked)
+        {
+            blockedTime -= Time.deltaTime;
+            if (blockedTime <= 0)
+            {
+                isTouched = true;
+                blockedTime = 1.5f;
+            }
+        }
     }
 
     #region 事件
-
+    //我攻擊後，賦予他 被攻擊 或還有 被阻擋
     #region 攻擊處理,要調整，要觸發
     private void Attack()
     {
         //計算(攻擊長度/30cm)
-         power = Mathf.Abs((enterV3.x - exitV3.x) * (enterV3.y - exitV3.y) * (enterV3.z - exitV3.z) / 30);
+        power = Mathf.Abs((enterV3.x - exitV3.x) * (enterV3.y - exitV3.y) * (enterV3.z - exitV3.z) / 30);
     }
     /// <summary>
     /// 打人的進入點
     /// </summary>
     /// <param name="collision"></param>
-    private Vector3 OnTriggerEnter(Collision collision)
+    private void OnTriggerEnter(Collision collision)
     {
+        //攻擊到玩家
         if (collision.gameObject.CompareTag("Player"))
         {
             enterV3 = armRigi.ClosestPoint(arm.transform.position);
         }
-            return enterV3;
     }
     /// <summary>
     /// 打人的離開點
     /// </summary>
     /// <param name="collision"></param>
-    private Vector3 OnTriggerExit(Collision collision)
+    private void OnTriggerExit(Collision collision)
     {
+        //攻擊到玩家
         if (collision.gameObject.CompareTag("Player"))
         {
             exitV3 = armRigi.ClosestPoint(arm.transform.position);
         }
-            return exitV3;
+        //給 敵人 bool被攻擊，要實用
+        collision.GetType();
+        Attack();
     }
     #endregion
 
@@ -198,10 +237,38 @@ public class JoyStick : MonoBehaviour
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        isTouched = true;
-        joyStick.transform.position = Input.GetTouch(0).position;
-        //播放拔刀動畫
-        //根據點擊區域撥放不同種動畫，要調整
+        //被阻擋，需要一段時間恢復
+        if (isTouched)
+        {
+            joyStick.transform.position = Input.GetTouch(0).position;
+            #region 根據點擊區域撥放不同種動畫
+            //點擊右邊，播放短距離拔刀動畫
+            if (joyStick.transform.position.y > 0 && joyStick.transform.position.x > 0)
+            {
+                if (attCentral > 0)
+                {
+                    //點左一段時間內點右，播放橫砍動畫
+                    anim.Play("attCentral");
+                }
+                else
+                {
+                    anim.Play("attRight");
+                }
+                attCentral = 0;
+            }
+            //點擊左邊，播放拔刀禦敵動畫
+            if (joyStick.transform.position.y > 0 && joyStick.transform.position.x < 0)
+            {
+                attCentral = 1;
+                anim.Play("attLeft");
+            }
+            //點擊下面，播放普通拔刀動畫
+            if (joyStick.transform.position.y < 0)
+            {
+                anim.Play("att");
+            }
+            #endregion
+        }
     }
     public void OnMove(PointerEventData eventData)
     {
@@ -382,10 +449,8 @@ public class JoyStick : MonoBehaviour
     public void OnPointerUp(PointerEventData eventData)
     {
         joyStick.transform.position = startPos;
-        isTouched = false;
-
-        //播放收刀動畫
-        //
+        //最優先 播放收刀動畫，優先層級要調整
+        anim.Play("atted");
     }
     #endregion
 
