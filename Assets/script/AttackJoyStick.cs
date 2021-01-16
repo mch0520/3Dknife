@@ -10,9 +10,9 @@ using UnityEngine.UI;
 //https://forum.gamer.com.tw/C.php?bsn=60602&snA=497    動畫看3樓跟4樓的對話。462
 //https://docs.unity3d.com/ScriptReference/Animator.GetCurrentAnimatorStateInfo.html     返回帶有當前狀態信息的AnimatorStateInfo，速度，長度，名稱和其他變量 462
 //玩家間有段距離，未攻擊時到距離內 被擊退。格擋時到距離內，被擊退
-//格擋時，往正對敵人的攻擊左右方向跨步，擊潰敵人的攻擊
+//格擋時，往正對 敵人的攻擊方向 左或右 跨步，擊潰敵人的攻擊
 
-public class JoyStick : MonoBehaviour
+public class AttackJoyStick : MonoBehaviour
 {
     #region 欄位
     [Header("搖桿")]

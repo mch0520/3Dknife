@@ -65,7 +65,8 @@
     <Compile Include="Assets\SapphiArt\SapphiArtchan\Scripts\AnimationManagerUI.cs" />
     <Compile Include="Assets\SapphiArt\SapphiArtchan\Scripts\SapphiArtChan_AnimManager.cs" />
     <Compile Include="Assets\script\Att.cs" />
-    <Compile Include="Assets\script\JoyStick.cs" />
+    <Compile Include="Assets\script\AttackJoyStick.cs" />
+    <Compile Include="Assets\script\MoveJoyStick.cs" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>C:/Users/張哲豪/unity3d/UX/3Dknife/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>
