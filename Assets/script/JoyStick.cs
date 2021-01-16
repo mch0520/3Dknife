@@ -6,6 +6,11 @@ using UnityEngine.UI;
 
 /** https://k79k06k02k.pixnet.net/blog/post/114531737?pixfrom=related **/
 //武器跟角色轉向未實行
+//Animator Layers（动画分层）能够实现：上半身动作 和下半身动作 同时分别进行，互相独立。能够 分开大量的 动作。317
+//https://forum.gamer.com.tw/C.php?bsn=60602&snA=497    動畫看3樓跟4樓的對話。462
+//https://docs.unity3d.com/ScriptReference/Animator.GetCurrentAnimatorStateInfo.html     返回帶有當前狀態信息的AnimatorStateInfo，速度，長度，名稱和其他變量 462
+//玩家間有段距離，未攻擊時到距離內 被擊退。格擋時到距離內，被擊退
+//格擋時，往正對敵人的攻擊左右方向跨步，擊潰敵人的攻擊
 
 public class JoyStick : MonoBehaviour
 {
@@ -116,6 +121,10 @@ public class JoyStick : MonoBehaviour
             Parry();
             parry = true;
         }
+        else
+        {
+            isTouched = true;
+        }
         //拔刀禦敵 一段時間後，可 橫砍時間 失效
         if (attCentral > 0)
         {
@@ -169,9 +178,9 @@ public class JoyStick : MonoBehaviour
         if (collision.gameObject.CompareTag("Player"))
         {
             exitV3 = armRigi.ClosestPoint(arm.transform.position);
+            //給 敵人 bool被攻擊，要實用
+            collision.GetType();
         }
-        //給 敵人 bool被攻擊，要實用
-        collision.GetType();
         Attack();
     }
     #endregion
@@ -242,7 +251,7 @@ public class JoyStick : MonoBehaviour
         {
             joyStick.transform.position = Input.GetTouch(0).position;
             #region 根據點擊區域撥放不同種動畫
-            //點擊右邊，播放短距離拔刀動畫
+            //點擊右邊
             if (joyStick.transform.position.y > 0 && joyStick.transform.position.x > 0)
             {
                 if (attCentral > 0)
@@ -252,6 +261,7 @@ public class JoyStick : MonoBehaviour
                 }
                 else
                 {
+                    //播放短距離拔刀動畫，推出 往後收刀鞘 右手砍
                     anim.Play("attRight");
                 }
                 attCentral = 0;
