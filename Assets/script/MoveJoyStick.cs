@@ -21,11 +21,15 @@ public class MoveJoyStick : MonoBehaviour
     Vector2 joyStickV2;
     //位移後 搖桿位置
     Vector2 joyStickV2Move;
+    //位移後 要轉動的向量，以 位移後 搖桿位置 為原點
+    Vector2 joyStickMV2;
 
     [Tooltip("玩家自己")]
     public Rigidbody playerA;
     [Header("角色動畫")]
     public Animation anim;
+    //角色位移後再 轉動值
+    private float rotatePlayA;
 
     //玩家自己的攝影機 視角
     public Camera playerAC;
@@ -63,13 +67,58 @@ public class MoveJoyStick : MonoBehaviour
 
     #region 方法
     /// <summary>
-    ///角色位移
+    ///角色位移，到放開 才執行，要調整
     /// </summary>
     private void PlayerRotate()
     {
+        //跨完動畫
+
         //位移到一半，不能移動，放開 才位移完，在移動。要調整
+        joyStickMV2 = joyStick.GetComponent<RectTransform>().anchoredPosition - joyStickV2Move;
 
+        #region Atan2的xy為0,返回正確的角度,而不是拋出被0除的異常
+        if (joyStickMV2.x == 0 && joyStickMV2.y > 0)
+        {
+            rotatePlayA = 90;
+        }
+        else if (joyStickMV2.y < 0)
+        {
+            rotatePlayA = 270;
+        }
 
+        if (joyStickMV2.y == 0 && joyStickMV2.x >= 0)
+        {
+            rotatePlayA = 0;
+        }
+        else
+        {
+            rotatePlayA = 180;
+        }
+        #endregion
+
+        #region 向量轉為角度
+        if (joyStickMV2.x != 0 && joyStickMV2.y != 0)
+        {
+            //向量轉斜率Atan2() * 弧度轉角度 
+            //弧度轉角度 為 常數 Rad2Deg =57.29578
+            rotatePlayA = Mathf.Atan2(joyStickMV2.x, joyStickMV2.y) * Mathf.Rad2Deg;
+        }
+        #endregion
+
+        #region 控制角度在0~360
+        if (rotatePlayA < 0)
+        {
+            rotatePlayA += 360;
+        }
+        if (rotatePlayA > 360)
+        {
+            rotatePlayA -= 360;
+        }
+        #endregion
+
+        //normalized=1,角色轉向
+        playerA.transform.eulerAngles=new Vector3(0,rotatePlayA,0);
+        joyStickV2Move = Vector2.zero;
     }
 
 
@@ -83,7 +132,7 @@ public class MoveJoyStick : MonoBehaviour
         //紀錄 位移後 位置
         joyStickV2Move= Input.GetTouch(0).position;
 
-        //右腳
+        //右腳跨出去
         if (joyStick.transform.position.x > 0)
         {
             if (joyStickV2.x / jyRadiu < 0.5f)
@@ -117,7 +166,7 @@ public class MoveJoyStick : MonoBehaviour
                         PlayerRotate();
             }
         }
-        //左腳
+        //左腳跨出去
         if (joyStick.transform.position.x < 0)
         {
             if (joyStickV2.x / jyRadiu < 0.5f)
