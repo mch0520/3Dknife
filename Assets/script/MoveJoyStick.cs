@@ -28,14 +28,23 @@ public class MoveJoyStick : MonoBehaviour
     public Rigidbody playerA;
     [Header("角色動畫")]
     public Animation anim;
+    [Header("角色速度"), Range(0.5f, 1.2f)]
+    public float speed;
+    //初始速度
+    float startSpeed;
     //角色位移後再 轉動值
-    private float rotatePlayA;
+    private float rotatePlayA=0;
+    //敵人的武器角度
+    float armathB;
 
     //玩家自己的攝影機 視角
     public Camera playerAC;
 
     //是否離開地面
     bool vacate = false;
+
+    //頓下的時間
+    float squatTime;
     #endregion
 
     void Start()
@@ -44,13 +53,24 @@ public class MoveJoyStick : MonoBehaviour
         joyBG = GetComponent<GameObject>();
         anim = GetComponent<Animation>();
         playerAC = GetComponent<Camera>();
+        playerA = GetComponent<Rigidbody>();
 
         joyStick.transform.position = startPos;
+        startSpeed = speed;
     }
 
     void Update()
     {
-
+        //頓下時間 開始計時，0.5秒後重置
+        if (squatTime != 0)
+        {
+            float squatTimeB = Time.deltaTime;
+            if (squatTimeB > 0.5f)
+            {
+                squatTime = 0;
+                squatTimeB = 0;
+            }
+        }
 
     }
 
@@ -117,12 +137,21 @@ public class MoveJoyStick : MonoBehaviour
         #endregion
 
         //normalized=1,角色轉向
-        playerA.transform.eulerAngles=new Vector3(0,rotatePlayA,0);
+        playerA.transform.eulerAngles = new Vector3(0, rotatePlayA, 0);
         joyStickV2Move = Vector2.zero;
     }
 
-
+    //跨步();
     #endregion
+
+    #region 事件
+    private void OnTriggerEnter(Collider other)
+    {
+        speed = 0;
+        anim.Play("back");
+        speed = startSpeed;
+    }
+
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -130,93 +159,136 @@ public class MoveJoyStick : MonoBehaviour
         //搖桿與原點 的向量
         joyStickV2 = (Vector2)joyStick.transform.position - startPos;
         //紀錄 位移後 位置
-        joyStickV2Move= Input.GetTouch(0).position;
+        joyStickV2Move = Input.GetTouch(0).position;
 
-        //右腳跨出去
-        if (joyStick.transform.position.x > 0)
+        //格擋時，跨步擊潰攻擊
+        if (speed == 0 && (180 - armathB) > 90 && (180 - armathB) < 270)
         {
-            if (joyStickV2.x / jyRadiu < 0.5f)
+            if (joyStickV2Move.x < 0 && joyStickV2Move.y > 0)
             {
-                if (joyStickV2.y / jyRadiu > 0.5f)
-                {
-                    //1點鐘方向動畫
-                    if (joyStick.transform.position.y > 0)
-                    {
-
-                        PlayerRotate();
-                    }
-                    //5點鐘方向動畫
-                    else
-                    {
-
-                        PlayerRotate();
-                    }
-                }
-            }
-            //2點鐘方向動畫
-            else if (joyStick.transform.position.y > 0 )
-            {
-
-                        PlayerRotate();
-            }
-            //4點鐘方向動畫
-            else if (joyStick.transform.position.y < 0)
-            {
-
-                        PlayerRotate();
+                //跨步();
+                rotatePlayA = 1;
             }
         }
-        //左腳跨出去
-        if (joyStick.transform.position.x < 0)
+
+        //站立
+        if (squatTime < 0)
         {
-            if (joyStickV2.x / jyRadiu < 0.5f)
+            anim.Play("站立");
+            squatTime = 0;
+        }
+        if (anim["蹲下"].normalizedSpeed == 1)
+        {
+            squatTime -= Time.deltaTime;
+        }
+        //蹲下
+        if (squatTime > 0)
+        {
+            anim.Play("蹲下");
+            squatTime = 0;
+        }
+        if (anim["蹲下"].normalizedSpeed == 0)
+        {
+            squatTime += Time.deltaTime;
+        }
+
+        if (speed > 0)
+        {
+            //右腳跨出去
+            if (joyStick.transform.position.x > 0)
             {
-                if (joyStickV2.y / jyRadiu > 0.5f)
+                if (joyStickV2.x / jyRadiu < 0.5f)
                 {
-                    //11點鐘方向動畫
-                    if (joyStick.transform.position.y > 0)
+                    if (joyStickV2.y / jyRadiu > 0.5f)
                     {
+                        //1點鐘方向動畫
+                        if (joyStick.transform.position.y > 0)
+                        {
 
-                        PlayerRotate();
-                    }
-                    //7點鐘方向動畫
-                    else
-                    {
+                            PlayerRotate();
+                        }
+                        //5點鐘方向動畫
+                        else
+                        {
 
-                        PlayerRotate();
+                            PlayerRotate();
+                        }
                     }
                 }
-            }
-            //10點鐘方向動畫
-            else if (joyStick.transform.position.y > 0)
-            {
+                //2點鐘方向動畫
+                else if (joyStick.transform.position.y > 0)
+                {
 
-                        PlayerRotate();
-            }
-            //8點鐘方向動畫
-            else if (joyStick.transform.position.y < 0)
-            {
+                    PlayerRotate();
+                }
+                //4點鐘方向動畫
+                else if (joyStick.transform.position.y < 0)
+                {
 
-                        PlayerRotate();
+                    PlayerRotate();
+                }
+            }
+            //左腳跨出去
+            if (joyStick.transform.position.x < 0)
+            {
+                if (joyStickV2.x / jyRadiu < 0.5f)
+                {
+                    if (joyStickV2.y / jyRadiu > 0.5f)
+                    {
+                        //11點鐘方向動畫
+                        if (joyStick.transform.position.y > 0)
+                        {
+
+                            PlayerRotate();
+                        }
+                        //7點鐘方向動畫
+                        else
+                        {
+
+                            PlayerRotate();
+                        }
+                    }
+                }
+                //10點鐘方向動畫
+                else if (joyStick.transform.position.y > 0)
+                {
+
+                    PlayerRotate();
+                }
+                //8點鐘方向動畫
+                else if (joyStick.transform.position.y < 0)
+                {
+
+                    PlayerRotate();
+                }
             }
         }
     }
     public void OnMove(PointerEventData eventData)
     {
+        //蹲下不拖動
+        squatTime = 0;
         joyStick.transform.position = Input.GetTouch(0).position;
         joyStickV2 = (Vector2)joyStick.transform.position - startPos;
         if (joyStickV2.x > jyRadiu * 0.6 || joyStickV2.y > jyRadiu * 0.6)
         {
             //跑步方向同步攝影機
             playerA.velocity = joyStick.transform.position * (Vector2)playerAC.transform.forward * 1.5f;
+            anim.Play("run");
         }
-        else
+        else if (squatTime == 0)
         {
             //走路方向同步攝影機
             playerA.velocity = joyStick.transform.position * (Vector2)playerAC.transform.forward;
+            anim.Play("walk");
         }
+        else
+        {
+            //走路
+            playerA.velocity = joyStick.transform.position * (Vector2)playerAC.transform.forward*0.7f;
+            anim.Play("walk");
 
-
+        }
     }
     public void OnPointerUp(PointerEventData eventData)
     {
@@ -225,5 +297,20 @@ public class MoveJoyStick : MonoBehaviour
         {
             playerA.velocity = new Vector3(0, 2, 0);
         }
+
+        if (rotatePlayA>0)
+        {
+            joyStickMV2 = joyStickV2 - joyStickV2Move;
+            playerA.rotation.eulerAngles=new Vector3(0, rotatePlayA, 0);
+            speed = startSpeed;
+            rotatePlayA = 0;
+        }
+        else if (speed > startSpeed)
+        {
+            anim.Play("jump");
+            speed = startSpeed;
+        }
+
     }
+    #endregion
 }
