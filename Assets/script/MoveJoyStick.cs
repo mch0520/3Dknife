@@ -16,9 +16,9 @@ public class MoveJoyStick : MonoBehaviour
     //搖桿離背景圖中心的距離
     public Vector2 direction;
     //搖桿原點
-    public Vector2 startPos = Vector2.zero;
-    //目前搖桿位置
-    Vector2 joyStickV2;
+    Vector2 startPos = Vector2.zero;
+    //目前搖桿位置。測試完要設定私人
+    public Vector2 joyStickV2;
     //位移後 搖桿位置
     Vector2 joyStickV2Move;
     //位移後 要轉動的向量，以 位移後 搖桿位置 為原點
@@ -32,8 +32,10 @@ public class MoveJoyStick : MonoBehaviour
     public float speed;
     //初始速度
     float startSpeed;
+    //搖桿拉開後，跳躍
+    bool jump;
     //角色位移後再 轉動值
-    private float rotatePlayA=0;
+    private float playerRotate = 0;
     //敵人的武器角度
     float armathB;
 
@@ -61,7 +63,7 @@ public class MoveJoyStick : MonoBehaviour
 
     void Update()
     {
-        //頓下時間 開始計時，0.5秒後重置
+        //蹲下時間 開始計時，0.5秒後重置
         if (squatTime != 0)
         {
             float squatTimeB = Time.deltaTime;
@@ -87,32 +89,38 @@ public class MoveJoyStick : MonoBehaviour
 
     #region 方法
     /// <summary>
-    ///角色位移，到放開 才執行，要調整
+    ///角色轉身
     /// </summary>
     private void PlayerRotate()
     {
-        //跨完動畫
+        if (joyStickV2.x == 0 && joyStickV2.y == 0)
+        {
+            //播放不跨步
 
-        //位移到一半，不能移動，放開 才位移完，在移動。要調整
+            speed = startSpeed;
+            return;
+        }
+
+        //放開點-開始點 的向量
         joyStickMV2 = joyStick.GetComponent<RectTransform>().anchoredPosition - joyStickV2Move;
 
         #region Atan2的xy為0,返回正確的角度,而不是拋出被0除的異常
         if (joyStickMV2.x == 0 && joyStickMV2.y > 0)
         {
-            rotatePlayA = 90;
+            playerRotate = 90;
         }
         else if (joyStickMV2.y < 0)
         {
-            rotatePlayA = 270;
+            playerRotate = 270;
         }
 
         if (joyStickMV2.y == 0 && joyStickMV2.x >= 0)
         {
-            rotatePlayA = 0;
+            playerRotate = 0;
         }
         else
         {
-            rotatePlayA = 180;
+            playerRotate = 180;
         }
         #endregion
 
@@ -121,37 +129,117 @@ public class MoveJoyStick : MonoBehaviour
         {
             //向量轉斜率Atan2() * 弧度轉角度 
             //弧度轉角度 為 常數 Rad2Deg =57.29578
-            rotatePlayA = Mathf.Atan2(joyStickMV2.x, joyStickMV2.y) * Mathf.Rad2Deg;
+            playerRotate = Mathf.Atan2(joyStickMV2.x, joyStickMV2.y) * Mathf.Rad2Deg;
         }
         #endregion
 
         #region 控制角度在0~360
-        if (rotatePlayA < 0)
+        if (playerRotate < 0)
         {
-            rotatePlayA += 360;
+            playerRotate += 360;
         }
-        if (rotatePlayA > 360)
+        if (playerRotate > 360)
         {
-            rotatePlayA -= 360;
+            playerRotate -= 360;
         }
         #endregion
 
-        //normalized=1,角色轉向
-        playerA.transform.eulerAngles = new Vector3(0, rotatePlayA, 0);
+        //播放跨完動畫
+
+        //normalized=1,角色再轉向
+        if (joyStickMV2.x != 0 && joyStickMV2.y != 0)
+        {
+            //快速轉身
+            playerA.transform.eulerAngles = new Vector3(0, playerRotate, 0);
+            speed = startSpeed;
+        }
         joyStickV2Move = Vector2.zero;
     }
 
-    //跨步();
+    /// <summary>
+    /// 跨步
+    /// </summary>
+    void Stride()
+    {
+        speed = 0;
+
+        //右腳跨出去
+        if (joyStick.transform.position.x > 0)
+        {
+            if (joyStickV2.x / jyRadiu < 0.5f)
+            {
+                if (joyStickV2.y / jyRadiu > 0.5f)
+                {
+                    //1點鐘方向動畫
+                    if (joyStick.transform.position.y > 0)
+                    {
+
+                    }
+                    //5點鐘方向動畫
+                    else
+                    {
+
+                    }
+                }
+            }
+            //2點鐘方向動畫
+            else if (joyStick.transform.position.y > 0)
+            {
+
+            }
+            //4點鐘方向動畫
+            else if (joyStick.transform.position.y < 0)
+            {
+
+            }
+        }
+        //左腳跨出去
+        if (joyStick.transform.position.x < 0)
+        {
+            if (joyStickV2.x / jyRadiu < 0.5f)
+            {
+                if (joyStickV2.y / jyRadiu > 0.5f)
+                {
+                    //11點鐘方向動畫
+                    if (joyStick.transform.position.y > 0)
+                    {
+
+                    }
+                    //7點鐘方向動畫
+                    else
+                    {
+
+                    }
+                }
+            }
+            //10點鐘方向動畫
+            else if (joyStick.transform.position.y > 0)
+            {
+
+            }
+            //8點鐘方向動畫
+            else if (joyStick.transform.position.y < 0)
+            {
+
+            }
+        }
+
+        //延遲到放開搖桿，才執行PlayerRotate()
+        playerRotate = 1;
+    }
     #endregion
 
     #region 事件
+    /// <summary>
+    /// 玩家碰撞玩家，被擊退。要調整
+    /// </summary>
+    /// <param name="other"></param>
     private void OnTriggerEnter(Collider other)
     {
         speed = 0;
         anim.Play("back");
         speed = startSpeed;
     }
-
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -161,16 +249,30 @@ public class MoveJoyStick : MonoBehaviour
         //紀錄 位移後 位置
         joyStickV2Move = Input.GetTouch(0).position;
 
-        //格擋時，跨步擊潰攻擊
-        if (speed == 0 && (180 - armathB) > 90 && (180 - armathB) < 270)
+        //格擋時不能移動，並且有 敵人的攻擊角度armathB
+        if (speed == 0)
         {
-            if (joyStickV2Move.x < 0 && joyStickV2Move.y > 0)
+            //如果靠太近被撞，播放被擊退動畫。如果不是，再執行下一列。要調整
+
+            //跨步擊潰 左邊來的攻擊
+            if ((180 - armathB) > 90 && (180 - armathB) < 270)
             {
-                //跨步();
-                rotatePlayA = 1;
+                if (joyStickV2Move.x < 0 && joyStickV2Move.y > 0)
+                {
+                    Stride();
+                }
+            }
+            //跨步擊潰 右邊來的攻擊
+            else if ((180 - armathB) <= 90 && (180 - armathB) >= 270)
+            {
+                if (joyStickV2Move.x > 0 && joyStickV2Move.y > 0)
+                {
+                    Stride();
+                }
             }
         }
 
+        #region 蹲下開關
         //站立
         if (squatTime < 0)
         {
@@ -191,77 +293,11 @@ public class MoveJoyStick : MonoBehaviour
         {
             squatTime += Time.deltaTime;
         }
+        #endregion
 
         if (speed > 0)
         {
-            //右腳跨出去
-            if (joyStick.transform.position.x > 0)
-            {
-                if (joyStickV2.x / jyRadiu < 0.5f)
-                {
-                    if (joyStickV2.y / jyRadiu > 0.5f)
-                    {
-                        //1點鐘方向動畫
-                        if (joyStick.transform.position.y > 0)
-                        {
-
-                            PlayerRotate();
-                        }
-                        //5點鐘方向動畫
-                        else
-                        {
-
-                            PlayerRotate();
-                        }
-                    }
-                }
-                //2點鐘方向動畫
-                else if (joyStick.transform.position.y > 0)
-                {
-
-                    PlayerRotate();
-                }
-                //4點鐘方向動畫
-                else if (joyStick.transform.position.y < 0)
-                {
-
-                    PlayerRotate();
-                }
-            }
-            //左腳跨出去
-            if (joyStick.transform.position.x < 0)
-            {
-                if (joyStickV2.x / jyRadiu < 0.5f)
-                {
-                    if (joyStickV2.y / jyRadiu > 0.5f)
-                    {
-                        //11點鐘方向動畫
-                        if (joyStick.transform.position.y > 0)
-                        {
-
-                            PlayerRotate();
-                        }
-                        //7點鐘方向動畫
-                        else
-                        {
-
-                            PlayerRotate();
-                        }
-                    }
-                }
-                //10點鐘方向動畫
-                else if (joyStick.transform.position.y > 0)
-                {
-
-                    PlayerRotate();
-                }
-                //8點鐘方向動畫
-                else if (joyStick.transform.position.y < 0)
-                {
-
-                    PlayerRotate();
-                }
-            }
+            Stride();
         }
     }
     public void OnMove(PointerEventData eventData)
@@ -275,6 +311,7 @@ public class MoveJoyStick : MonoBehaviour
             //跑步方向同步攝影機
             playerA.velocity = joyStick.transform.position * (Vector2)playerAC.transform.forward * 1.5f;
             anim.Play("run");
+            jump = true;
         }
         else if (squatTime == 0)
         {
@@ -285,30 +322,24 @@ public class MoveJoyStick : MonoBehaviour
         else
         {
             //走路
-            playerA.velocity = joyStick.transform.position * (Vector2)playerAC.transform.forward*0.7f;
+            playerA.velocity = joyStick.transform.position * (Vector2)playerAC.transform.forward * 0.7f;
             anim.Play("walk");
-
         }
     }
     public void OnPointerUp(PointerEventData eventData)
     {
         //跳躍
-        if (!vacate)
+        if (!vacate && jump)
         {
             playerA.velocity = new Vector3(0, 2, 0);
+            jump = false;
         }
 
-        if (rotatePlayA>0)
+        //跨步後的 轉身
+        if (playerRotate > 0)
         {
-            joyStickMV2 = joyStickV2 - joyStickV2Move;
-            playerA.rotation.eulerAngles=new Vector3(0, rotatePlayA, 0);
-            speed = startSpeed;
-            rotatePlayA = 0;
-        }
-        else if (speed > startSpeed)
-        {
-            anim.Play("jump");
-            speed = startSpeed;
+            PlayerRotate();
+            playerRotate = 0;
         }
 
     }
