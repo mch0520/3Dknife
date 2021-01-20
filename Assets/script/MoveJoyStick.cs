@@ -41,6 +41,15 @@ public class MoveJoyStick : MonoBehaviour
 
     //玩家自己的攝影機 視角
     public Camera playerAC;
+    [Header("cameraX")]
+    public float cameraX;
+    [Header("cameraY")]
+    public float cameraY;
+    [Header("cameraZ")]
+    public float cameraZ;
+    //轉動視角
+    public float cameraRotate;
+    //第一人稱
 
     //是否離開地面
     bool vacate = false;
@@ -74,6 +83,14 @@ public class MoveJoyStick : MonoBehaviour
             }
         }
 
+        //視角調整
+        Vector3 cameraV3 = new Vector3(cameraX, cameraY, cameraZ);
+        //相機 跟隨 角色
+        playerAC.transform.position = playerA.transform.position + cameraV3;
+        //注視 角色頭頂Y
+        playerAC.transform.LookAt(new Vector3(playerA.transform.position.x, playerA.transform.position.y + 3.5f, playerA.transform.position.z));
+        //轉視角
+        playerAC.transform.RotateAround(playerA.transform.position, Vector3.down, cameraRotate / 3.5f);
     }
 
     void FixedUpdate()
@@ -174,11 +191,13 @@ public class MoveJoyStick : MonoBehaviour
                     if (joyStick.transform.position.y > 0)
                     {
 
+                        cameraRotate = 30;
                     }
                     //5點鐘方向動畫
                     else
                     {
 
+                        cameraRotate = 150;
                     }
                 }
             }
@@ -186,11 +205,13 @@ public class MoveJoyStick : MonoBehaviour
             else if (joyStick.transform.position.y > 0)
             {
 
+                        cameraRotate = 60;
             }
             //4點鐘方向動畫
             else if (joyStick.transform.position.y < 0)
             {
 
+                        cameraRotate = 120;
             }
         }
         //左腳跨出去
@@ -204,11 +225,13 @@ public class MoveJoyStick : MonoBehaviour
                     if (joyStick.transform.position.y > 0)
                     {
 
+                        cameraRotate = -30;
                     }
                     //7點鐘方向動畫
                     else
                     {
 
+                        cameraRotate = -150;
                     }
                 }
             }
@@ -216,11 +239,13 @@ public class MoveJoyStick : MonoBehaviour
             else if (joyStick.transform.position.y > 0)
             {
 
+                        cameraRotate = -60;
             }
             //8點鐘方向動畫
             else if (joyStick.transform.position.y < 0)
             {
 
+                        cameraRotate = -120;
             }
         }
 
@@ -250,24 +275,25 @@ public class MoveJoyStick : MonoBehaviour
         joyStickV2Move = Input.GetTouch(0).position;
 
         //格擋時不能移動，並且有 敵人的攻擊角度armathB
-        if (speed == 0)
+        if (anim["back"].normalizedSpeed != 0 && anim["back"].normalizedSpeed != 1)
         {
-            //如果靠太近被撞，播放被擊退動畫。如果不是，再執行下一列。要調整
-
-            //跨步擊潰 左邊來的攻擊
-            if ((180 - armathB) > 90 && (180 - armathB) < 270)
+            if (speed == 0)
             {
-                if (joyStickV2Move.x < 0 && joyStickV2Move.y > 0)
+                //跨步擊潰 左邊來的攻擊
+                if ((180 - armathB) > 90 && (180 - armathB) < 270)
                 {
-                    Stride();
+                    if (joyStickV2Move.x < 0 && joyStickV2Move.y > 0)
+                    {
+                        Stride();
+                    }
                 }
-            }
-            //跨步擊潰 右邊來的攻擊
-            else if ((180 - armathB) <= 90 && (180 - armathB) >= 270)
-            {
-                if (joyStickV2Move.x > 0 && joyStickV2Move.y > 0)
+                //跨步擊潰 右邊來的攻擊
+                else if ((180 - armathB) <= 90 && (180 - armathB) >= 270)
                 {
-                    Stride();
+                    if (joyStickV2Move.x > 0 && joyStickV2Move.y > 0)
+                    {
+                        Stride();
+                    }
                 }
             }
         }
